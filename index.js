@@ -1,7 +1,7 @@
 // using the http module
 let http = require('http'),
 fs = require('fs-extra'),
-
+path = require('path'),
 shortId = require('shortid'),
 
 // hard coded conf object
@@ -24,12 +24,7 @@ checkReq = function (req) {
 
         if (req.method != 'POST') {
 
-            reject(JSON.stringify({
-
-                    mess: 'not a post request',
-                    success: false
-
-                }));
+            reject('not a post request');
 
         }
 
@@ -64,12 +59,8 @@ parseReq = function (req) {
 
                 req.connection.destroy();
 
-                reject(JSON.stringify({
-
-                        mess: 'Please do not do that, thank you. ( body length limit: ' + conf.maxBodyLength + ')',
-                        success: false
-
-                    }));
+                reject('Please do not do that, thank you. ( body length limit: ' +
+                    conf.maxBodyLength + ')');
 
             }
 
@@ -94,12 +85,7 @@ parseReq = function (req) {
 
             } catch (e) {
 
-                reject(JSON.stringify({
-
-                        mess: 'could not parse body.',
-                        success: false
-
-                    }));
+                reject('could not parse body.');
 
             }
 
@@ -107,25 +93,200 @@ parseReq = function (req) {
 
     });
 
-};
+},
 
-// create a simple server
-let server = http.createServer(function (req, res) {
+// check for the given id
+idCheck = function (id) {
 
-        checkReq(req).then(function () {
+    return new Promise(function (resolve, reject) {
 
-            return parseReq(req);
+        fs.ensureDir('./users').then(function () {
 
-        }).then(function (result) {
+            let dir = path.join('./users', 'user_' + id + '.json');
 
-            res.writeHead(200, {
-                'Content-Type': 'text/plain'
+            fs.readFile(dir, 'utf-8').then(function (user) {
+
+                resolve(JSON.parse(user));
+
+            }).catch (function (e) {
+
+                reject(e.message);
+
             });
 
-            res.write(JSON.stringify(result), 'utf-8');
-            res.end();
+        }).catch (function (e) {
 
-        }).catch (function (result) {
+            reject(e.message);
+
+        });
+
+    });
+
+},
+
+// check for the given id
+idNew = function () {
+
+    return new Promise(function (resolve, reject) {
+
+        return fs.ensureDir('./users').then(function () {
+
+            let id = shortId.generate(),
+            now = new Date(),
+            user = {
+
+                id: id,
+                visit: {
+
+                    count: 1,
+                    first: now,
+                    last: now
+
+                }
+
+            },
+            dir = path.join('./users', 'user_' + id + '.json');
+
+            return fs.writeFile(dir, JSON.stringify(user), 'utf-8').then(function () {
+
+                resolve(user);
+
+            }).catch (function (e) {
+
+                reject(e.message);
+
+            });
+
+        }).catch (function (e) {
+
+            reject(e.message);
+
+        });
+
+    });
+},
+
+// check Body
+checkBody = function (body) {
+
+    return new Promise(function (resolve, reject) {
+
+        if (body.action) {
+
+            // if log set action
+            if (body.action === 'log-set') {
+
+                if (body.id) {
+
+                    // check for that id
+                    idCheck(body.id).then(function (user) {
+
+                        resolve({
+
+                            success: true,
+                            mess: 'log-set action.',
+                            id: user.id,
+                            user: user
+
+                        });
+
+                    }).catch (function (e) {
+
+                        // new user
+                        idNew().then(function (user) {
+
+                            resolve({
+
+                                success: true,
+                                mess: 'log-set action.',
+                                id: user.id,
+                                user: user
+
+                            });
+
+                        }).catch (function (mess) {
+
+                            reject(mess);
+
+                        });
+
+                    });
+
+                } else {
+
+                    // new user
+                    idNew().then(function (user) {
+
+                        resolve({
+
+                            success: true,
+                            mess: 'log-set action.',
+                            id: user.id,
+                            user: user
+
+                        });
+
+                    }).catch (function (mess) {
+
+                        reject(mess);
+
+                    });
+
+                }
+
+            } else {
+
+                reject('unkown action.')
+
+            }
+
+        } else {
+
+            reject('no action given')
+
+        }
+
+    });
+
+},
+
+// create a simple server
+server = http.createServer(function (req, res) {
+
+        if (req.method === 'POST') {
+
+            checkReq(req).then(function () {
+
+                return parseReq(req);
+
+            }).then(function (result) {
+
+                return checkBody(result.body);
+
+            }).then(function (result) {
+
+                res.writeHead(200, {
+                    'Content-Type': 'text/plain'
+                });
+
+                res.write(JSON.stringify(result), 'utf-8');
+                res.end();
+
+            }).catch (function (mess) {
+
+                res.writeHead(200, {
+                    'Content-Type': 'text/plain'
+                });
+                res.end(JSON.stringify({
+                        success: false,
+                        mess: mess,
+                        id: '',
+                        user: ''
+                    }));
+
+            });
+
+        } else {
 
             if (req.method === 'GET' && req.url === '/') {
 
@@ -142,20 +303,22 @@ let server = http.createServer(function (req, res) {
                     res.writeHead(200, {
                         'Content-Type': 'text/plain'
                     });
-                    res.end(e.message);
+                    res.end(JSON.stringify({
+                            success: false,
+                            mess: e.message,
+                            id: '',
+                            user: ''
+                        }));
 
                 });
 
             } else {
 
-                res.writeHead(200, {
-                    'Content-Type': 'text/plain'
-                });
-                res.end(result);
+                res.end();
 
             }
 
-        });
+        }
 
     });
 
