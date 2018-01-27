@@ -95,6 +95,55 @@ parseReq = function (req) {
 
 },
 
+writeToUser = function (user) {
+
+    return new Promise(function (resolve, reject) {
+
+        let dir = path.join('./users', 'user_' + user.id + '.json');
+
+
+        fs.writeFile(dir, JSON.stringify(user), 'utf-8').then(function () {
+
+            resolve(user);
+
+        }).catch (function (e) {
+
+            reject(e.message);
+
+        });
+
+    });
+
+},
+
+updateUser = function (user) {
+
+    return new Promise(function (resolve, reject) {
+
+        let dir = path.join('./users', 'user_' + user.id + '.json');
+
+        fs.readFile(dir, 'utf-8').then(function (user) {
+
+            user = JSON.parse(user);
+
+            user.visit.count += 1;
+            user.visit.last = new Date();
+
+            return writeToUser(user);
+
+        }).then(function (user) {
+
+            resolve(user);
+
+        }).catch (function (mess) {
+
+            reject(mess);
+
+        });
+
+    });
+},
+
 // check for the given id
 idCheck = function (id) {
 
@@ -180,6 +229,10 @@ checkBody = function (body) {
 
                     // check for that id
                     idCheck(body.id).then(function (user) {
+
+                        return updateUser(user);
+
+                    }).then(function (user) {
 
                         resolve({
 

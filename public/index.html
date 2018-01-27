@@ -77,10 +77,10 @@ var logSet = function(){
             var result = JSON.parse(res.response),
             text = '';
 
-            text += 'mess : ' + result.mess + '\n';
-            text += 'success : ' + result.success + '\n';
-            text += 'id : ' + result.id + '\n';
-            text += result.user + '\n';
+            text += 'mess : ' + result.mess + '; \n';
+            text += 'success : ' + result.success + '; \n';
+            text += 'id : ' + result.id + '; \n';
+            text += JSON.stringify(result.user) + '; \n';
             text += '********** \n'
 
             document.getElementById('out').innerText += text;
