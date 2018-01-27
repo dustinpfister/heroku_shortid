@@ -112,22 +112,48 @@ parseReq = function (req) {
 // create a simple server
 let server = http.createServer(function (req, res) {
 
-        res.writeHead(200, {
-            'Content-Type': 'text/plain'
-        });
-
         checkReq(req).then(function () {
 
             return parseReq(req);
 
         }).then(function (result) {
 
+            res.writeHead(200, {
+                'Content-Type': 'text/plain'
+            });
+
             res.write(JSON.stringify(result), 'utf-8');
             res.end();
 
         }).catch (function (result) {
 
-            res.end(result);
+            if (req.method === 'GET' && req.url === '/') {
+
+                fs.readFile('./public/index.html', 'utf-8').then(function (html) {
+
+                    res.writeHead(200, {
+                        'Content-Type': 'text/html'
+                    });
+                    res.write(html, 'utf-8');
+                    res.end();
+
+                }).catch (function (e) {
+
+                    res.writeHead(200, {
+                        'Content-Type': 'text/plain'
+                    });
+                    res.end(e.message);
+
+                });
+
+            } else {
+
+                res.writeHead(200, {
+                    'Content-Type': 'text/plain'
+                });
+                res.end(result);
+
+            }
 
         });
 

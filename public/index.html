@@ -1,0 +1,101 @@
+<!doctype html>
+<html>
+    <head>
+        <title>heroku short id</title>
+    </head>
+    <body>
+
+        <h1>Heroku short id system</h1>
+        <textarea id="out" cols="60" rows="15">
+        </textarea>
+        <script>
+
+var postIt = function (argu) {
+ 
+    var xhr = new XMLHttpRequest();
+ 
+    console.log('okay');
+ 
+    if(typeof argu != 'object'){
+
+        argu = {data : argu};
+
+    }
+
+    argu.url = argu.url || window.location.href;
+    argu.data = argu.data || {};
+    argu.beforeSend = argu.beforeSend || function(xhr,next){
+       next();
+    };
+    argu.done = argu.done || function (res) {
+        console.log(res);
+    };
+    argu.fail = argu.fail || function (res) {
+        console.log(res);
+    };
+ 
+    xhr.open('post', argu.url);
+ 
+    xhr.onreadystatechange = function () {
+ 
+        if (this.readyState === 4) {
+ 
+            if (this.status === 200) {
+ 
+                argu.done(this);
+ 
+            } else {
+ 
+                argu.fail(this);
+ 
+            }
+ 
+        }
+ 
+    };
+
+    argu.beforeSend(xhr, function(){
+ 
+        xhr.send(argu.data);
+ 
+    });
+ 
+};
+
+// login, or setup if no user_id
+var logSet = function(){
+
+
+    postIt({
+
+        // try to login with the given id, or undefined from local storage
+        data : JSON.stringify({
+
+            action : 'logSet',
+            id : window.localStorage['user_id']
+
+        }),
+        done : function(res){
+
+            var result = JSON.parse(res.response),
+            text = '';
+
+            text += 'mess : ' + result.mess + '\n';
+            text += 'success : ' + result.success + '\n';
+
+            console.log(result.mess);
+
+            document.getElementById('out').innerText += text;
+
+        }
+
+    });
+
+};
+
+logSet();
+
+         </script>
+
+    </body>
+</html>
