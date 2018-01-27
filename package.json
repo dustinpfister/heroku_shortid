@@ -1,0 +1,18 @@
+{
+  "name": "heroku_short_id",
+  "version": "1.0.0",
+  "main": "index.js",
+  "engines": {
+    "node": "8.9.3"
+  },
+  "description": "A herku app that makes use of short id",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Dustin Pfister",
+  "license": "GPL-3.0",
+  "dependencies": {
+    "fs-extra": "^5.0.0",
+    "shortid": "^2.2.8"
+  }
+}
