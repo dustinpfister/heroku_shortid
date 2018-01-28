@@ -6,12 +6,11 @@
     <body>
 
         <h1>Heroku short id system</h1>
-        <textarea id="out" cols="60" rows="15">
-        </textarea>
+        <textarea id="out" cols="60" rows="15"></textarea>
 		
 		<br>
-		<input id="user_name" type="text"><br>
-		<input id="user_say" type="text" ><br>
+		<input id="user_name" type="text" value="John Doe"><br>
+		<input id="user_say" type="text" value="I have nothing to say"><br>
 		<input id="user_update" type="button" value="update">
 		
 		
@@ -73,6 +72,29 @@ var get = function(id){
 
 };
 
+var log = function(res){
+	
+	
+            var result = JSON.parse(res.response),
+			text = '********** \n';
+        
+            text += 'mess : ' + result.mess + '; \n';
+            text += 'success : ' + result.success + '; \n';
+            text += 'id : ' + result.id + '; \n';
+            text += JSON.stringify(result.user) + '; \n';
+            text += '********** \n'
+
+            get('out').value += text;
+
+            if(result.id){
+
+                window.localStorage['user_id'] = result.id;
+
+            }
+	
+	
+};
+
 // login, or setup if no user_id
 var logSet = function(){
 
@@ -82,29 +104,24 @@ var logSet = function(){
         data : JSON.stringify({
 
             action : 'logset',
-            id : 'Bkel3Z59rM'//window.localStorage['user_id']
+            id : window.localStorage['user_id']
 
         }),
         done : function(res){
-
-            var result = JSON.parse(res.response),
-            text = '';
-
-            text += 'mess : ' + result.mess + '; \n';
-            text += 'success : ' + result.success + '; \n';
-            text += 'id : ' + result.id + '; \n';
-            text += JSON.stringify(result.user) + '; \n';
-            text += '********** \n'
-
-            get('out').innerText += text;
-
-			get('user_name').value = 'fool'
 			
-            if(result.id){
+			
+			var result = JSON.parse(res.response)
+			
+			if(result.user.userset){
+			
+			get('user_name').value = result.user.userset.name;
+		    get('user_say').value = result.user.userset.say;
+			
+			}
+			
+			
 
-                window.localStorage['user_id'] = result.id;
-
-            }
+		    log(res);
 
         }
 
@@ -121,14 +138,20 @@ get('user_update').addEventListener('click', function(){
         // try to login with the given id, or undefined from local storage
         data : JSON.stringify({
 
-            action : 'update',
-            id : window.localStorage['user_id']
+            action : 'userset',
+            id : window.localStorage['user_id'],
+			userset : {
+				
+				name : get('user_name').value,
+				say : get('user_say').value
+				
+			}
 
         }),
 		
 		done : function(res){
 		
-		   console.log(res.response);
+		   log(res);
 		
 		}
 
