@@ -8,6 +8,13 @@
         <h1>Heroku short id system</h1>
         <textarea id="out" cols="60" rows="15">
         </textarea>
+		
+		<br>
+		<input id="user_name" type="text"><br>
+		<input id="user_say" type="text" ><br>
+		<input id="user_update" type="button" value="update">
+		
+		
         <script>
 
 var postIt = function (argu) {
@@ -60,6 +67,12 @@ var postIt = function (argu) {
  
 };
 
+var get = function(id){
+
+   return document.getElementById(id);
+
+};
+
 // login, or setup if no user_id
 var logSet = function(){
 
@@ -68,8 +81,8 @@ var logSet = function(){
         // try to login with the given id, or undefined from local storage
         data : JSON.stringify({
 
-            action : 'log-set',
-            id : window.localStorage['user_id']
+            action : 'logset',
+            id : 'Bkel3Z59rM'//window.localStorage['user_id']
 
         }),
         done : function(res){
@@ -83,8 +96,10 @@ var logSet = function(){
             text += JSON.stringify(result.user) + '; \n';
             text += '********** \n'
 
-            document.getElementById('out').innerText += text;
+            get('out').innerText += text;
 
+			get('user_name').value = 'fool'
+			
             if(result.id){
 
                 window.localStorage['user_id'] = result.id;
@@ -98,6 +113,28 @@ var logSet = function(){
 };
 
 logSet();
+
+get('user_update').addEventListener('click', function(){
+
+    postIt({
+
+        // try to login with the given id, or undefined from local storage
+        data : JSON.stringify({
+
+            action : 'update',
+            id : window.localStorage['user_id']
+
+        }),
+		
+		done : function(res){
+		
+		   console.log(res.response);
+		
+		}
+
+    });
+
+});
 
          </script>
 
